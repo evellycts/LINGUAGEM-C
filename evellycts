@@ -1,0 +1,164 @@
+//Definições e Estruturas de Dados
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+//definem o número máximo de candidatos e eleitores, respectivamente.
+#define MAX_CANDIDATOS 100
+#define MAX_ELEITORES 1000
+
+//A estrutura Candidato armazena o ID, nome e o número de votos de um candidato.
+typedef struct {
+    int id;
+    char nome[100];
+    int votos;
+} Candidato;
+
+//A estrutura Eleitor armazena o ID, nome, senha e um indicador de se o eleitor já votou.
+typedef struct {
+    int id;
+    char nome[100];
+    char senha[10];
+    int votou;
+} Eleitor;
+
+//Declaração de Variáveis Globais
+Candidato candidatos[MAX_CANDIDATOS];
+Eleitor eleitores[MAX_ELEITORES];
+int totalCandidatos = 0;
+int totalEleitores = 0;
+
+//Função para Registrar Candidatos
+void registrar_candidato(int id, char *nome) {
+    for (int i = 0; i < totalCandidatos; i++) {
+        if (candidatos[i].id == id) {
+            printf("Candidato com ID %d já está registrado.\n", id);
+            return;
+        }
+    }
+    candidatos[totalCandidatos].id = id;
+    strcpy(candidatos[totalCandidatos].nome, nome);
+    candidatos[totalCandidatos].votos = 0;
+    totalCandidatos++;
+}//Esta função adiciona um novo candidato ao array candidatos.
+//Verifica se o candidato já está registrado pelo ID.
+//Se não estiver registrado, adiciona o candidato e inicializa o número de votos para 0.
+
+//Função para Registrar Eleitores
+void registrar_eleitor(int id, char *nome,char *senha) {
+    for (int i = 0; i < totalEleitores; i++) {
+        if (eleitores[i].id == id) {
+            printf("Eleitor com ID %d já está registrado.\n", id);
+            return;
+        }
+    }
+    eleitores[totalEleitores].id = id;
+    strcpy(eleitores[totalEleitores].nome, nome);
+    strcpy(eleitores[totalEleitores].senha, senha);
+    eleitores[totalEleitores].votou = 0;
+    totalEleitores++;
+}//Esta função adiciona um novo eleitor ao array eleitores.
+//Verifica se o eleitor já está registrado pelo ID.
+//Se não estiver registrado, adiciona o eleitor e inicializa o indicador votou para 0.
+
+//Autenticar Eleitor
+int autenticar_eleitor(int id, char *senha) {
+    for (int i = 0; i < totalEleitores; i++) {
+        if (eleitores[i].id == id && strcmp(eleitores[i].senha, senha) == 0) {
+            return i;
+        }
+    }
+    return -1; // Eleitor não encontrado ou senha incorreta
+}//Verifica se o ID e a senha do eleitor são válidos. Retorna o índice do eleitor se autenticado com sucesso, ou -1 se a autenticação falhar.
+
+
+// função de registrar voto 
+void registrar_voto(int id_eleitor, int id_candidato) {
+    int eleitorIndex = -1;
+    for (int i = 0; i < totalEleitores; i++) {
+        if (eleitores[i].id == id_eleitor) {
+            eleitorIndex = i;
+            break;//registra um voto de um eleitor para um candidato
+        }
+    } //Verifica se o ID do eleitor existe.
+    if (eleitorIndex == -1) {
+        printf("Eleitor com ID %d não encontrado.\n", id_eleitor);
+        return;
+    }// Verifica se o eleitor já votou.
+    if (eleitores[eleitorIndex].votou) {
+        printf("Eleitor já votou.\n");
+        return;
+    }
+
+    int candidatoIndex = -1;
+    for (int i = 0; i < totalCandidatos; i++) {
+        if (candidatos[i].id == id_candidato) {
+            candidatoIndex = i;
+            break;
+        }
+    }//Verifica se o ID do candidato existe.
+    if (candidatoIndex == -1) {
+        printf("Candidato com ID %d não encontrado.\n", id_candidato); 
+        return;
+    }
+//Incrementa o número de votos do candidato e marca o eleitor como tendo votado.
+    eleitores[eleitorIndex].votou = 1;
+    candidatos[candidatoIndex].votos++; 
+    printf("Voto registrado com sucesso.\n");
+}
+
+// função de contar e exibir votos
+void contar_votos() {
+    for (int i = 0; i < totalCandidatos; i++) {
+        printf("%s: %d votos\n", candidatos[i].nome, candidatos[i].votos);
+    }//exibe o número de votos de cada candidato.
+}
+
+// função principal 
+int main() {
+    // Registrar candidatos
+    registrar_candidato(14, "Suzanne");
+    registrar_candidato(28, "Bob");
+    registrar_candidato(42, "Marcos");
+
+    // Registrar eleitores
+    registrar_eleitor(101, "Carlos","12345");
+    registrar_eleitor(102, "Daniela","54321");
+    registrar_eleitor(103, "Liliane","67890");
+    registrar_eleitor(104, "Fabiano","09876");
+    registrar_eleitor(105, "Augusto", "0531");
+
+    // Registrar votos com input do usuário e autenticação
+    int id_eleitor, id_candidato;
+    char senha[10];
+    char continuar;
+    do {
+       // autenticação
+        printf("Digite o ID do eleitor: ");
+        scanf("%d", &id_eleitor);
+        printf("Digite a senha: ");
+        scanf("%s", senha);
+        int index = autenticar_eleitor(id_eleitor, senha);
+        if (index != -1) {
+            printf("Autenticação bem-sucedida.\n");
+        } else {
+            printf("ID ou senha incorretos.\n");
+        }
+
+        // registrar voto apos autenticação
+        printf("Menu de Candidatos:\n14-Suzanne\n28-Bob\n42-Marcos\n");
+        printf("Digite o ID do candidato: ");
+        scanf("%d", &id_candidato);
+        registrar_voto(id_eleitor, id_candidato);
+
+    printf("Deseja registrar outro voto?\ns- sim \nn-não\n ");
+    scanf(" %c", &continuar);
+    
+    } while (continuar == 's' || continuar == 'S');
+
+    // Exibir resultados
+    contar_votos();
+    return 0;
+}
+//O código inclui verificações para garantir que um eleitor não vote duas vezes e que apenas IDs de eleitores e candidatos válidos sejam aceitos.
+//Exibe mensagens apropriadas se um eleitor ou candidato não for encontrado.s
